@@ -1,14 +1,18 @@
 <template>
   <header
-    class="w-full h-16 flex items-center justify-between z-50 bg-white border-b border-grey-light px-4 md:px-12"
+    class="w-full h-16 flex items-center justify-between z-50 bg-white border-b border-grey-light px-4"
   >
     <!-- Left: Logo + Mobile Hamburger -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 md:hidden">
       <Button
         icon="pi pi-bars"
         class="md:hidden !p-2 !rounded-md !bg-gray-100 hover:!bg-gray-200 text-gray-700"
         @click="$emit('openSidebar')"
       />
+      <Logo />
+    </div>
+
+    <div class="flex items-center gap-3 md:flex hidden">
       <Logo />
     </div>
 

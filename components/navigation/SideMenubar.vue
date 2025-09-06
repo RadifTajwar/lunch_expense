@@ -34,14 +34,14 @@
 
     <!-- Footer -->
     <div
-      class="p-3 border-t relative rounded hover:bg-gray-100 cursor-pointer"
-      @click="toggleMenu"
+      class="border-t border-b relative rounded cursor-pointer"
       ref="menuWrapper"
     >
       <!-- Avatar -->
 
       <div
-        class="flex w-full items-center"
+        class="flex w-full items-center p-3 hover:bg-gray-100"
+        @click="toggleMenu"
         :class="{ 'justify-center': !isOpen }"
       >
         <div
@@ -56,13 +56,13 @@
       <!-- Dropdown Menu -->
       <div
         v-if="showMenu"
-        class="absolute bottom-14 left-4 bg-white shadow-lg rounded-md w-40 z-50"
+        class="absolute -bottom-[25px] right-0 bg-white shadow-lg rounded-md w-52 z-50 border border-gray-100"
       >
         <button
-          class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           @click="handleLogout"
+          class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 gap-2"
         >
-          Logout
+          <i class="pi pi-sign-out"></i> Log Out
         </button>
       </div>
     </div>
@@ -75,6 +75,7 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { MENU_LINKS } from "@/constants/menulinks";
 import checkUserPermission from "@/utils/check-user-permission";
+import { navigateTo } from "nuxt/app";
 
 defineProps({
   isOpen: {
@@ -102,7 +103,7 @@ const handleClickOutside = (event) => {
 
 const handleLogout = async () => {
   await store.dispatch("auth/logOut");
-  router.push("/");
+  navigateTo("/");
 };
 
 onMounted(() => {
