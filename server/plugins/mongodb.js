@@ -8,15 +8,16 @@ export default defineNitroPlugin(async () => {
     return;
   }
 
-  // Prevent multiple connections in dev
-  if (mongoose.connection && mongoose.connection.readyState !== 1) {
+  if (mongoose.connection.readyState === 0) {
     try {
       await mongoose.connect(config.MONGO_URI, {
-        dbName: "lunch_expense", // <-- your DB name
+        dbName: "lunch_expense", // match your DB name
       });
       console.log("✅ [MongoDB] Connected successfully to MongoDB");
     } catch (err) {
       console.error("❌ [MongoDB] Connection failed:", err.message);
     }
+  } else {
+    console.log("ℹ️ [MongoDB] Already connected");
   }
 });
