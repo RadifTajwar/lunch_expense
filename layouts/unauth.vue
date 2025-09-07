@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen bg-grey-lighter flex flex-1 flex-col">
+  <div
+    class="min-h-screen bg-grey-lighter flex flex-1 flex-col overflow-hidden"
+  >
     <HeaderNonAuth />
     <slot />
   </div>

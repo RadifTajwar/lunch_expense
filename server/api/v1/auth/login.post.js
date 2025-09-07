@@ -1,5 +1,5 @@
 import { OAuth2Client } from "google-auth-library";
-import User from "~/server/models/user"; // lowercase 'user' folder for consistency
+import User from "~/server/models/user";
 import jwt from "jsonwebtoken";
 
 export default defineEventHandler(async (event) => {
@@ -28,16 +28,16 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { email, name } = payload;
+  const { email } = payload;
 
-  // 🔍 Check if user exists in DB (using static method)
-  let user = await User.findByEmail(email);
+  // 🔍 Check if user exists in DB
+  const user = await User.findByEmail(email);
 
   if (!user) {
-    user = await User.create({
-      email,
-      name,
-      role: "member", // default role
+    // ❌ Do NOT auto-create — reject login
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Access denied. Please contact admin.",
     });
   }
 
