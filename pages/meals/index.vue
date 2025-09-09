@@ -104,6 +104,35 @@
         </Column>
         <Column field="description" header="Description" />
         <Column field="totalCost" header="Total Cost" />
+        <!-- Total Meal Count -->
+        <Column header="Total Meal Count">
+          <template #body="slotProps">
+            {{
+              slotProps.data.attendees?.reduce(
+                (sum, a) => sum + (a.mealCount || 0),
+                0
+              ) || 0
+            }}
+          </template>
+        </Column>
+
+        <!-- Per Person Rate -->
+        <Column header="Per Person Rate">
+          <template #body="slotProps">
+            {{
+              (() => {
+                const totalMeals =
+                  slotProps.data.attendees?.reduce(
+                    (sum, a) => sum + (a.mealCount || 0),
+                    0
+                  ) || 0;
+                return totalMeals > 0
+                  ? (slotProps.data.totalCost / totalMeals).toFixed(2)
+                  : "0.00";
+              })()
+            }}
+          </template>
+        </Column>
 
         <!-- Actions -->
         <Column header="Actions" style="min-width: 12rem" v-if="canManageMeals">
