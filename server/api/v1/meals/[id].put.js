@@ -1,9 +1,13 @@
 // server/api/v1/meal/[id].put.js
 import Meal from "~/server/models/meal/index.js";
 import Attendance from "~/server/models/attendance/index.js";
+import { requireAdmin } from "~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
   try {
+    // ✅ Only admins can update meals
+    await requireAdmin(event);
+
     const id = getRouterParam(event, "id"); // mealId
     const body = await readBody(event);
 

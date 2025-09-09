@@ -9,18 +9,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   const authRequired = to.matched.some((route) => route.meta?.authRequired);
   const isLoggedIn = store.getters["auth/isLoggedIn"];
-  console.log(
-    "Middleware check: to=",
-    to.path,
-    "from=",
-    from.path,
-    "authRequired=",
-    authRequired,
-    "isLoggedIn=",
-    isLoggedIn,
-    "authToken=",
-    store.getters["auth/authToken"]
-  );
+
   // 🚫 If route needs auth but user not logged in → go home
   if (authRequired && !isLoggedIn) {
     return navigateTo({

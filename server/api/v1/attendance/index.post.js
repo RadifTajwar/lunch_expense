@@ -1,7 +1,12 @@
+// server/api/v1/attendance/index.post.js
 import Attendance from "~/server/models/attendance/attendance.schema";
+import { requireAdmin } from "~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
   try {
+    // ✅ Only admins can create attendance
+    await requireAdmin(event);
+
     const body = await readBody(event);
 
     if (!body.mealId || !body.userId) {

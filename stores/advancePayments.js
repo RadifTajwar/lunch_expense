@@ -77,7 +77,6 @@ export default {
 
   actions: {
     async fetchPayments({ commit, state }, newPage = 1) {
-      console.log("Fetching payments for page:", newPage);
       commit("SET_LOADING", true);
       commit("SET_PAGE", newPage);
 
@@ -110,7 +109,6 @@ export default {
           method: "POST",
           data: payload,
         });
-        console.log("Created payment:", data);
         // ✅ directly update state
         commit("ADD_PAYMENT", data.data);
       } catch (err) {

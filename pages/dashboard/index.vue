@@ -187,7 +187,6 @@ async function fetchDashboard() {
     // fetch 12 months meal rate trend
     const trendRes = await $fetch(`/api/v1/reports/mealRates`);
     mealRateHistory.value = trendRes.data || [];
-    console.log(mealRateHistory.value);
   } catch (err) {
     console.error(err);
     toast.add({

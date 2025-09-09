@@ -24,7 +24,6 @@ export default {
       state.users = users;
     },
     ADD_USER(state, user) {
-      console.log("Adding user:", user.user);
       state.users.unshift(user.user); // add on top
     },
     REMOVE_USER(state, userId) {

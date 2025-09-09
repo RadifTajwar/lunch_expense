@@ -1,9 +1,13 @@
 // server/api/v1/attendance/[id].put.js
 import Attendance from "~/server/models/attendance/index.js";
 import Meal from "~/server/models/meal/index.js";
+import { requireAdmin } from "~/server/utils/auth";
 
 export default defineEventHandler(async (event) => {
   try {
+    // ✅ Only admins can update attendance
+    await requireAdmin(event);
+
     const mealId = getRouterParam(event, "id"); // mealId comes from [id].put.js
     const body = await readBody(event);
     // body should look like: [{ userId, mealCount, checked }, ...]

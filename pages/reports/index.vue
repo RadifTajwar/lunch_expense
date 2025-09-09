@@ -70,7 +70,6 @@ const loading = ref(false);
 const selectedMonth = ref(new Date()); // default to current month
 
 async function fetchReports() {
-  console.log("Fetching reports for month:", selectedMonth.value);
   if (!selectedMonth.value) return;
 
   loading.value = true;
@@ -79,8 +78,6 @@ async function fetchReports() {
   const year = selectedMonth.value.getFullYear();
   const month = String(selectedMonth.value.getMonth() + 1).padStart(2, "0");
   const monthString = `${year}-${month}`;
-
-  console.log("Formatted month string:", monthString);
 
   try {
     const { data, error } = await $fetch(
@@ -93,8 +90,6 @@ async function fetchReports() {
       ...r,
       userName: r.name,
     }));
-
-    console.log("Fetched reports:", reports.value);
   } catch (err) {
     console.error(err);
     toast.add({

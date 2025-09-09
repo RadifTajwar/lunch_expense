@@ -82,7 +82,6 @@ export default {
       if (state.filters.cost) params.cost = state.filters.cost;
 
       const query = new URLSearchParams(params).toString();
-      console.log("Fetching meals with query:", query);
       try {
         const res = await apiRequest({
           url: `${MEALS_URL}?${query}`,
@@ -113,7 +112,6 @@ export default {
     },
 
     async updateMeal({ commit }, payload) {
-      console.log("Updating meal with ID:", payload);
       commit("SET_LOADING", true);
       try {
         const { data } = await apiRequest({
@@ -121,7 +119,6 @@ export default {
           method: "PUT",
           data: payload,
         });
-        console.log("Updated meal:", data);
         commit("UPDATE_MEAL", data);
       } finally {
         commit("SET_LOADING", false);
@@ -129,7 +126,6 @@ export default {
     },
 
     async saveAttendances({ commit }, { mealId, updates }) {
-      console.log("Saving attendances for meal ID:", mealId, updates);
       try {
         const res = await apiRequest({
           url: `${ATTENDANCE_URL}/${mealId}`, // e.g., new endpoint
@@ -143,7 +139,6 @@ export default {
     },
 
     async deleteMeal({ commit, dispatch, state }, mealId) {
-      console.log("Deleting meal with ID:", mealId);
       commit("SET_LOADING", true);
       try {
         await apiRequest({

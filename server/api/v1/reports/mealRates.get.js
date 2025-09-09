@@ -43,6 +43,5 @@ export default defineEventHandler(async () => {
       mealRate: totalUnits > 0 ? totalCost / totalUnits : 0,
     });
   }
-  console.log("Meal rate history:", last12);
   return { success: true, data: last12 };
 });

@@ -71,7 +71,6 @@ export default {
 
   actions: {
     async logIn({ commit }, credential) {
-      console.log("Logging in with credential:", credential);
       commit("AUTH_REQUEST");
       try {
         // 🔥 Send credential to backend

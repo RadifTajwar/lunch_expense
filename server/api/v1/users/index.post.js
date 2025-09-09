@@ -1,7 +1,11 @@
-import User from "~/server/models/user";
-import jwt from "jsonwebtoken";
+// server/api/v1/users/index.post.js
+import User from "~/server/models/user/index.js";
+import { requireAdmin } from "~/server/utils/auth.js"; // ✅ Import reusable check
 
 export default defineEventHandler(async (event) => {
+  // 🔒 Require admin
+  await requireAdmin(event);
+
   const body = await readBody(event);
   const { name, email, role } = body;
 
@@ -9,36 +13,6 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 400,
       statusMessage: "Name and email are required",
-    });
-  }
-
-  // ✅ Check auth token
-  const authHeader = getHeader(event, "authorization");
-  if (!authHeader) {
-    throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
-  }
-
-  const token = authHeader.split(" ")[1];
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (err) {
-    throw createError({ statusCode: 401, statusMessage: "Invalid token" });
-  }
-
-  // ✅ Verify user from DB (never trust JWT role blindly)
-  const authUser = await User.findOne({ email: decoded.email });
-  if (!authUser) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: "Unauthorized. User not found.",
-    });
-  }
-
-  if (authUser.role !== "admin") {
-    throw createError({
-      statusCode: 403,
-      statusMessage: "Forbidden. Only admins can create users.",
     });
   }
 

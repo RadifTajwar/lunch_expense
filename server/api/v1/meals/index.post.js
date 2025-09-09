@@ -2,12 +2,15 @@
 import Meal from "~/server/models/meal/index.js";
 import Attendance from "~/server/models/attendance/index.js";
 import User from "~/server/models/user/index.js";
+import { requireAdmin } from "~/server/utils/auth.js";
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody(event);
+    // ✅ Require admin
+    await requireAdmin(event);
 
     // 1️⃣ Create Meal
+    const body = await readBody(event);
     const meal = await Meal.create(body);
 
     // 2️⃣ Fetch all users
@@ -29,7 +32,7 @@ export default defineEventHandler(async (event) => {
       success: true,
       data: {
         ...meal.toObject(),
-        attendees: attendance.attendees, // 👈 merged directly
+        attendees: attendance.attendees,
       },
     };
   } catch (err) {

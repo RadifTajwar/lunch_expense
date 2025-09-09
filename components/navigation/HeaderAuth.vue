@@ -86,7 +86,6 @@ export default {
       }
     },
     handleLogOut() {
-      console.log("Logging out user:", this.userName);
       this.logOut();
       navigateTo("/");
     },

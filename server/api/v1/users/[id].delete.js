@@ -1,11 +1,47 @@
+// server/api/v1/users/[id].delete.js
 import User from "~/server/models/user";
+import Advance from "~/server/models/AdvancePayment";
+import { requireAdmin } from "~/server/utils/auth";
+import { calculateUserBalance } from "~/server/utils/balance";
 
 export default defineEventHandler(async (event) => {
   try {
+    // ✅ Ensure admin
+    const authUser = await requireAdmin(event);
+
+    // ✅ Get user ID from route
     const id = getRouterParam(event, "id");
 
-    const user = await User.findByIdAndDelete(id);
+    // 🚫 Prevent deleting self
+    if (authUser._id.toString() === id) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Admins cannot delete themselves",
+      });
+    }
 
+    // 📊 Calculate balance
+    const balance = await calculateUserBalance(id);
+
+    if (balance < 0) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: `User cannot be deleted. Negative balance: ${balance}`,
+      });
+    }
+
+    if (balance > 0) {
+      // 🟢 Post advance payment to settle balance before deletion
+      await Advance.create({
+        userId: id,
+        amount: -balance, // negate it so final balance = 0
+        date: new Date(),
+        note: "Auto-adjust on user deletion",
+      });
+    }
+
+    // 🗑 Delete user
+    const user = await User.findByIdAndDelete(id);
     if (!user) {
       throw createError({
         statusCode: 404,
@@ -13,11 +49,15 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    return { message: "User deleted successfully", user };
+    return {
+      success: true,
+      message: "User deleted successfully",
+      user,
+    };
   } catch (err) {
     throw createError({
-      statusCode: 500,
-      statusMessage: err.message || "Failed to delete user",
+      statusCode: err.statusCode || 500,
+      statusMessage: err.statusMessage || "Failed to delete user",
     });
   }
 });
