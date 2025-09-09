@@ -1,7 +1,7 @@
 <template>
   <aside
-    class="h-screen bg-white shadow-md flex flex-col transition-all duration-300"
-    :class="isOpen ? 'w-64' : 'w-20'"
+    class="pt-20 bg-white shadow-md flex flex-col items-center sticky transition-all duration-300"
+    :class="isOpen ? 'w-72' : 'w-20'"
   >
     <!-- Logo + Toggle -->
     <div class="flex items-center justify-between p-4">
@@ -22,7 +22,12 @@
           <NuxtLink
             :to="link.path"
             class="flex items-center gap-3 p-3 rounded hover:bg-gray-100 cursor-pointer"
-            :class="{ 'justify-center': !isOpen }"
+            :class="[
+              { 'justify-center': !isOpen },
+              'transition-colors duration-200',
+            ]"
+            active-class="bg-blue-100 text-blue-700 font-semibold"
+            exact-active-class="bg-blue-100 text-blue-700 font-semibold"
             v-tooltip.right="!isOpen ? link.label : ''"
           >
             <i :class="link.icon"></i>
@@ -55,14 +60,26 @@
       </div>
       <!-- Dropdown Menu -->
       <div
-        v-if="showMenu"
-        class="absolute -bottom-[25px] right-0 bg-white shadow-lg rounded-md w-52 z-50 border border-gray-100"
+        v-if="showMenu && isOpen"
+        class="absolute -bottom-8 right-0 bg-white shadow-lg rounded-md w-72 z-50 border border-gray-100"
       >
         <button
           @click="handleLogout"
           class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 gap-2"
         >
           <i class="pi pi-sign-out"></i> Log Out
+        </button>
+      </div>
+
+      <div
+        v-if="!isOpen && showMenu"
+        class="absolute -bottom-8 right-0 bg-white shadow-lg p-2 rounded-md w-full z-50 border border-gray-100"
+      >
+        <button
+          @click="handleLogout"
+          class="flex items-center justify-center w-full text-sm text-red-600 hover:bg-red-50 gap-2"
+        >
+          <i class="pi pi-sign-out"></i>
         </button>
       </div>
     </div>
@@ -76,6 +93,8 @@ import { useRouter } from "vue-router";
 import { MENU_LINKS } from "@/constants/menulinks";
 import checkUserPermission from "@/utils/check-user-permission";
 import { navigateTo } from "nuxt/app";
+
+// ✅ Permission check
 
 defineProps({
   isOpen: {

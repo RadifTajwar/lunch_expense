@@ -12,7 +12,7 @@ const AdvancePaymentSchema = new Schema(
   },
   { timestamps: true }
 );
-
-AdvancePaymentSchema.index({ userId: 1, date: 1 });
+// ✅ TTL index (using createdAt timestamp)
+AdvancePaymentSchema.index({ date: 1 }, { expireAfterSeconds: 31536000 });
 
 export default AdvancePaymentSchema;

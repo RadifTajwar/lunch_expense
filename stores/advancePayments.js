@@ -1,5 +1,6 @@
 import apiRequest from "~/utils/apiRequest";
 import { ADVANCE_PAYMENTS_URL } from "~/config/apiEndPoints";
+import StepPanel from "primevue/steppanel";
 
 export default {
   namespaced: true,
@@ -45,10 +46,38 @@ export default {
     SET_LOADING(state, value) {
       state.loading = value;
     },
+    ADD_PAYMENT(state, payment) {
+      state.payments.unshift(payment); // put at top
+    },
+    DELETE_PAYMENT(state, paymentId) {
+      state.payments = state.payments.filter((p) => p._id !== paymentId);
+    },
+    UPDATE_PAYMENT(state, updatedPayment) {
+      // handle if response is wrapped in { data: ... }
+      const paymentData = updatedPayment.data || updatedPayment;
+
+      const index = state.payments.findIndex(
+        (p) => String(p._id) === String(paymentData._id)
+      );
+
+      if (index !== -1) {
+        const existing = state.payments[index];
+
+        state.payments.splice(index, 1, {
+          ...existing,
+          ...paymentData,
+          userId:
+            typeof paymentData.userId === "string"
+              ? existing.userId // keep populated object if backend only returned ID
+              : paymentData.userId, // use populated user if provided
+        });
+      }
+    },
   },
 
   actions: {
     async fetchPayments({ commit, state }, newPage = 1) {
+      console.log("Fetching payments for page:", newPage);
       commit("SET_LOADING", true);
       commit("SET_PAGE", newPage);
 
@@ -73,21 +102,61 @@ export default {
         commit("SET_LOADING", false);
       }
     },
-    async createPayment({ commit, dispatch }, payload) {
-      commit("SET_LOADING", true); // 🔹 turn on loader
+    async createPayment({ commit }, payload) {
+      commit("SET_LOADING", true);
       try {
-        await apiRequest({
+        const { data } = await apiRequest({
           url: ADVANCE_PAYMENTS_URL,
           method: "POST",
           data: payload,
         });
-
-        await dispatch("fetchPayments", 1); // reload after success
+        console.log("Created payment:", data);
+        // ✅ directly update state
+        commit("ADD_PAYMENT", data.data);
       } catch (err) {
         console.error("❌ Failed to create payment:", err);
-        throw err; // so Toast can catch it in UI
+        throw err;
       } finally {
-        commit("SET_LOADING", false); // 🔹 turn off loader
+        commit("SET_LOADING", false);
+      }
+    },
+    async deletePayment({ commit, dispatch, state }, paymentId) {
+      commit("SET_LOADING", true);
+      try {
+        await apiRequest({
+          url: `${ADVANCE_PAYMENTS_URL}/${paymentId}`,
+          method: "DELETE",
+        });
+
+        // ✅ directly remove from state
+        commit("DELETE_PAYMENT", paymentId);
+
+        // ✅ If this page is now empty AND not the first page → load previous page
+        if (state.page > 1 && state.payments.length === 0) {
+          await dispatch("fetchPayments", state.page - 1);
+        }
+      } catch (err) {
+        console.error("❌ Failed to delete payment:", err);
+        throw err;
+      } finally {
+        commit("SET_LOADING", false);
+      }
+    },
+    async updatePayment({ commit }, payload) {
+      commit("SET_LOADING", true);
+      try {
+        const { data } = await apiRequest({
+          url: `${ADVANCE_PAYMENTS_URL}/${payload._id}`,
+          method: "PUT",
+          data: payload,
+        });
+
+        commit("UPDATE_PAYMENT", data);
+      } catch (err) {
+        console.error("❌ Failed to update payment:", err);
+        throw err;
+      } finally {
+        commit("SET_LOADING", false);
       }
     },
   },

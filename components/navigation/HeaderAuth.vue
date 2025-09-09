@@ -1,6 +1,6 @@
 <template>
   <header
-    class="w-full h-16 flex items-center justify-between z-50 bg-white border-b border-grey-light px-4"
+    class="fixed top-0 left-0 right-0 h-16 flex items-center justify-between z-50 bg-white border-b border-gray-200 px-4 md:px-12 shadow-sm"
   >
     <!-- Left: Logo + Mobile Hamburger -->
     <div class="flex items-center gap-3 md:hidden">

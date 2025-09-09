@@ -1,3 +1,4 @@
+// server/api/advance/index.post.js
 import AdvancePayment from "~/server/models/AdvancePayment";
 import User from "~/server/models/user";
 import jwt from "jsonwebtoken";
@@ -18,7 +19,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 401, statusMessage: "Invalid token" });
     }
 
-    // ✅ Verify actual user from DB (never trust token role)
+    // ✅ Verify actual user from DB
     const authUser = await User.findOne({ email: decoded.email });
     if (!authUser) {
       throw createError({
@@ -56,12 +57,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // 💾 Create advance payment
-    const payment = await AdvancePayment.create({
+    let payment = await AdvancePayment.create({
       userId,
       amount,
       tips,
       date,
     });
+
+    // 🔄 Populate user info before sending response
+    payment = await payment.populate("userId", "name email role");
 
     return {
       success: true,

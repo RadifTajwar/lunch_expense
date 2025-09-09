@@ -1,64 +1,57 @@
-// server/scripts/seed.js
 import mongoose from "mongoose";
+import Meal from "../models/meal/index.js";
+import Attendance from "../models/attendance/index.js";
+import User from "../models/user/index.js"; // assuming you already have users
 import dotenv from "dotenv";
-import User from "../models/user/index.js";
-import AdvancePayment from "../models/AdvancePayment/index.js";
-
-dotenv.config(); // load .env for MONGO_URI
-
+dotenv.config();
 async function seed() {
+  console.log("🔄 Starting seeding process...", process.env.MONGO_URI);
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "lunch_expense",
-    });
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ Connected to MongoDB");
 
-    // Clear old data (optional)
-    await User.deleteMany({});
-    await AdvancePayment.deleteMany({});
-    console.log("🧹 Cleared old data");
+    // Clear existing data
+    await Meal.deleteMany({});
+    await Attendance.deleteMany({});
 
-    // Create some users
-    const users = await User.insertMany([
-      { name: "Alice", email: "alice@example.com", role: "member" },
-      { name: "Bob", email: "bob@example.com", role: "admin" },
-      { name: "Charlie", email: "charlie@example.com", role: "member" },
-    ]);
-    console.log(
-      "👤 Inserted users:",
-      users.map((u) => u.name)
-    );
+    // Fetch some users (make sure you have users already)
+    const users = await User.find().limit(3);
+    if (users.length === 0) {
+      console.log("❌ No users found. Please seed users first.");
+      process.exit(1);
+    }
 
-    // Create some advance payments
-    const payments = [
+    // Create meals
+    const meals = await Meal.insertMany([
       {
-        userId: users[0]._id,
-        amount: 1000,
         date: new Date("2025-09-01"),
-        tips: 20,
+        description: "Chicken Curry with Rice",
+        totalCost: 600,
       },
       {
-        userId: users[1]._id,
-        amount: 1500,
-        date: new Date("2025-09-03"),
-        tips: 0,
+        date: new Date("2025-09-02"),
+        description: "Fish Fry with Dal",
+        totalCost: 550,
       },
-      {
-        userId: users[2]._id,
-        amount: 1200,
-        date: new Date("2025-09-05"),
-        tips: 10,
-      },
+    ]);
+
+    console.log("✅ Meals seeded:", meals.length);
+
+    // Create attendance (assign users randomly to meals)
+    const attendanceData = [
+      { mealId: meals[0]._id, userId: users[0]._id },
+      { mealId: meals[0]._id, userId: users[1]._id },
+      { mealId: meals[1]._id, userId: users[1]._id },
+      { mealId: meals[1]._id, userId: users[2]._id },
     ];
 
-    await AdvancePayment.insertMany(payments);
-    console.log("💰 Inserted advance payments");
+    const attendance = await Attendance.insertMany(attendanceData);
+    console.log("✅ Attendance seeded:", attendance.length);
 
-    console.log("✅ Seeding complete!");
+    console.log("🎉 Seeding completed successfully!");
     process.exit(0);
   } catch (err) {
-    console.error("❌ Error seeding data:", err);
+    console.error("❌ Seeding failed:", err);
     process.exit(1);
   }
 }
