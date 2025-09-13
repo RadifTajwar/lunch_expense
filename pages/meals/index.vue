@@ -1,6 +1,6 @@
 <template>
   <div class="pt-20 px-6">
-    <h2 class="text-xl font-semibold">Meals</h2>
+    <h2 class="text-xl font-semibold">Search Meals</h2>
 
     <!-- 🔄 Loader -->
     <div v-if="loading" class="flex justify-center items-center h-32">
@@ -163,7 +163,7 @@
               :attendees="slotProps.data.attendees"
               :users="allUsers"
               :updatedAttendances="updatedAttendances"
-              @save="saveAttendances"
+              :onSave="saveAttendances"
               :hasPermission="canManageMeals"
             />
           </div>
@@ -196,7 +196,10 @@
       v-model:visible="editVisible"
       header="Edit Meal"
       :style="{ width: '30rem' }"
-      modal
+      modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-4">
@@ -242,7 +245,10 @@
       v-model:visible="deleteVisible"
       header="Confirm Delete"
       :style="{ width: '25rem' }"
-      modal
+      modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <p>Are you sure you want to delete this payment?</p>
       <template #footer>
@@ -285,8 +291,16 @@ const editVisible = ref(false);
 const deleteVisible = ref(false);
 const paymentToDelete = ref(null);
 
+const today = new Date();
+const formatDate = (date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const form = ref({
-  date: "",
+  date: formatDate(today),
   description: "",
   totalCost: "",
 });

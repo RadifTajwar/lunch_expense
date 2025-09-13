@@ -34,14 +34,24 @@ export default defineEventHandler(async (event) => {
       // 🟢 Post advance payment to settle balance before deletion
       await Advance.create({
         userId: id,
-        amount: -balance, // negate it so final balance = 0
+        amount: -balance, // negate so final balance = 0
         date: new Date(),
-        note: "Auto-adjust on user deletion",
+        note: "Auto-adjust on user soft deletion",
       });
     }
 
-    // 🗑 Delete user
-    const user = await User.findByIdAndDelete(id);
+    // 🟡 Soft delete user
+    const user = await User.findByIdAndUpdate(
+      id,
+      {
+        active: false,         // mark inactive
+        deleted: true,         // mark deleted
+        deletedAt: new Date(), // timestamp
+        deletedBy: authUser._id,
+      },
+      { new: true }
+    );
+
     if (!user) {
       throw createError({
         statusCode: 404,
@@ -51,7 +61,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       success: true,
-      message: "User deleted successfully",
+      message: "User soft-deleted successfully",
       user,
     };
   } catch (err) {

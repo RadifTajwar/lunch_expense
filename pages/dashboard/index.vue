@@ -1,16 +1,16 @@
 <template>
   <div class="pt-20 px-6">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-wrap items-center justify-between mb-6">
       <h2 class="text-2xl font-semibold">📊 Dashboard</h2>
 
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <!-- Month Picker -->
         <Calendar
           v-model="selectedMonth"
           view="month"
           dateFormat="yy-mm"
-          placeholder="Select Month"
+          placeholder="Selec572t Month"
           class="w-40"
           @update:modelValue="fetchDashboard"
         />
@@ -36,7 +36,7 @@
       <!-- Advance Paid -->
       <Card class="shadow-md rounded-2xl">
         <template #content>
-          <div class="p-4 text-center">
+          <div class="text-center">
             <h3 class="text-lg font-medium">💰 Advance Paid</h3>
             <p class="text-2xl font-bold text-green-600">
               {{ summary.totalAdvance.toFixed(2) }} tk
@@ -48,7 +48,7 @@
       <!-- Meal Expenses -->
       <Card class="shadow-md rounded-2xl">
         <template #content>
-          <div class="p-4 text-center">
+          <div class="text-center">
             <h3 class="text-lg font-medium">🍽️ Meal Expenses</h3>
             <p class="text-2xl font-bold text-red-600">
               {{ summary.totalExpense.toFixed(2) }} tk
@@ -60,7 +60,7 @@
       <!-- Final Balance -->
       <Card class="shadow-md rounded-2xl">
         <template #content>
-          <div class="p-4 text-center">
+          <div class="text-center">
             <h3 class="text-lg font-medium">⚖️ Final Balance</h3>
             <p
               class="text-2xl font-bold"
@@ -75,7 +75,7 @@
       <!-- Total Meals -->
       <Card class="shadow-md rounded-2xl">
         <template #content>
-          <div class="p-4 text-center">
+          <div class="text-center">
             <h3 class="text-lg font-medium">🍛 Total Meals</h3>
             <p class="text-2xl font-bold text-purple-600">
               {{ totalMeals }} meals
@@ -87,7 +87,7 @@
       <!-- Meal Rate -->
       <Card class="shadow-md rounded-2xl">
         <template #content>
-          <div class="p-4 text-center">
+          <div class="text-center">
             <h3 class="text-lg font-medium">📈 Meal Rate</h3>
             <p class="text-2xl font-bold text-blue-600">
               {{ mealRate.toFixed(2) }} tk/meal
@@ -99,7 +99,6 @@
 
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Line Chart -->
       <Card class="shadow-md rounded-2xl lg:col-span-2">
         <template #content>
           <div class="p-4">

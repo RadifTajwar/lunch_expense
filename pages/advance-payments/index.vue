@@ -153,7 +153,10 @@
       v-model:visible="editVisible"
       header="Edit Advance Payment"
       :style="{ width: '30rem' }"
-      modal
+      modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-4">
@@ -212,7 +215,10 @@
       v-model:visible="deleteVisible"
       header="Confirm Delete"
       :style="{ width: '25rem' }"
-      modal
+      modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <p>Are you sure you want to delete this payment?</p>
       <template #footer>
@@ -276,8 +282,16 @@ const emailFilter = computed({
   set: (val) => store.commit("advancePayments/SET_FILTERS", { email: val }),
 });
 
+const today = new Date();
+const formatDate = (date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 // ➕ Add Payment Form
-const form = ref({ userId: "", amount: null, tips: 0, date: "" });
+const form = ref({ userId: "", amount: null, tips: 0, date: formatDate(today) });
 
 // ✏️ Edit Payment Modal
 const editVisible = ref(false);

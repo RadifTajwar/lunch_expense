@@ -37,7 +37,7 @@
         :disabled="!hasUpdates || saving || !hasPermission"
         :label="saving ? '' : 'Save Attendances'"
         severity="primary"
-        @click="onSave"
+        @click="onSaveClick"
       >
         <template v-if="saving" #default>
           <i class="pi pi-spin pi-spinner mr-2"></i> Saving...
@@ -50,16 +50,15 @@
 <script setup>
 import { computed, ref } from "vue";
 import MealCountInput from "./MealCountInput.vue";
-
 const props = defineProps({
   mealId: { type: String, required: true },
   attendees: { type: Array, default: () => [] },
   users: { type: Array, default: () => [] },
   updatedAttendances: { type: Object, required: true },
   hasPermission: { type: Boolean, default: false },
+  onSave: { type: Function, required: true },  // ✅ function prop
 });
 
-const emit = defineEmits(["save"]);
 
 const saving = ref(false);
 
@@ -113,7 +112,7 @@ function updateMealCount(userId, val) {
   };
 }
 
-async function onSave() {
+async function onSaveClick() {
   saving.value = true;
 
   const updates = rows.value.map((row) => ({
@@ -122,12 +121,13 @@ async function onSave() {
     checked: row.checked,
   }));
 
-  // Simulate 500ms loading
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  emit("save", { mealId: props.mealId, updates });
-
-  saving.value = false;
-  props.updatedAttendances[props.mealId] = {}; // Clear staged updates after save
+  try {
+    await props.onSave({ mealId: props.mealId, updates }); // ✅ await works now
+  } finally {
+    saving.value = false;
+    props.updatedAttendances[props.mealId] = {};
+  }
 }
+
+
 </script>

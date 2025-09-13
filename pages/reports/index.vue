@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-2xl font-semibold">📊 Monthly Reports</h2>
 
-      <div class="flex gap-3">
+      <div class="flex flex-wrap gap-3">
         <!-- Month Picker -->
         <Calendar
           v-model="selectedMonth"

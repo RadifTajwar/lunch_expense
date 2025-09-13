@@ -1,4 +1,3 @@
-// server/api/v1/users/[id].put.js
 import User from "~/server/models/user";
 import { requireAdmin } from "~/server/utils/auth";
 
@@ -10,7 +9,7 @@ export default defineEventHandler(async (event) => {
     // ✅ Target user ID
     const id = getRouterParam(event, "id");
     const body = await readBody(event);
-    const { name, email, role } = body;
+    const { name, email, role, active, deletedAt } = body;
 
     // 🚫 Prevent admin from changing their own role
     if (authUser._id.toString() === id && role && role !== authUser.role) {
@@ -20,12 +19,23 @@ export default defineEventHandler(async (event) => {
       });
     }
 
+    // ✅ Build update object dynamically (only include fields that exist in body)
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (role !== undefined) updateData.role = role;
+    if (active !== undefined) updateData.active = active;
+
+    // 🔹 Handle delete / restore
+    if (deletedAt !== undefined) {
+      updateData.deletedAt = deletedAt; // send null for restore, timestamp for delete
+    }
+
     // ✅ Perform the update
-    const user = await User.findByIdAndUpdate(
-      id,
-      { name, email, role },
-      { new: true, runValidators: true }
-    );
+    const user = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!user) {
       throw createError({

@@ -3,92 +3,219 @@
     <h1 class="text-2xl font-bold mb-4">Manage Users</h1>
 
     <!-- Add User Form -->
-    <form
-      @submit.prevent="addUser"
-      class="mb-6 flex flex-wrap gap-4 items-end border p-4 rounded bg-gray-50"
+  <form
+  @submit.prevent="addUser"
+  class="mb-6 flex flex-wrap gap-4 items-end border p-4 rounded bg-gray-50"
+>
+    
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Name</label>
+    <input
+      v-model="form.name"
+      type="text"
+      required
+      class="border rounded p-2 w-56"
+    />
+  </div>
+
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Email</label>
+    <input
+      v-model="form.email"
+      type="email"
+      required
+      class="border rounded p-2 w-56"
+    />
+  </div>
+
+ <div>
+  <label class="block text-sm font-medium">Role</label>
+  <Dropdown
+    v-model="form.role"
+    :options="[
+      { label: 'Member', value: 'member' },
+      { label: 'Admin', value: 'admin' }
+    ]"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="Select role"
+    class="w-40"
+  />
+</div>
+
+
+  <div>
+    <button
+      type="submit"
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
     >
-      <div>
-        <label class="block text-sm font-medium">Name</label>
-        <input
-          v-model="form.name"
-          type="text"
-          required
-          class="border rounded p-2 w-56"
-        />
-      </div>
+      Add User
+    </button>
+  </div>
+</form>
 
-      <div>
-        <label class="block text-sm font-medium">Email</label>
-        <input
-          v-model="form.email"
-          type="email"
-          required
-          class="border rounded p-2 w-56"
-        />
-      </div>
+<!-- 🔍 Filters -->
+<div class="mb-6 flex flex-wrap gap-4 items-end border p-4 rounded bg-gray-50">
+  <!-- Status -->
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Status</label>
+    <Dropdown
+      v-model="filters.status"
+      :options="[
+        { label: 'All Users', value: 'all' },
+        {label:'Current Users', value:'current'},
+        { label: 'Active', value: 'active' },
+        { label: 'Deleted', value: 'deleted' },
+        { label: 'Inactive', value: 'inactive' }
 
-      <div>
-        <label class="block text-sm font-medium">Role</label>
-        <select v-model="form.role" class="border rounded p-2 w-40">
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
+      ]"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Select status"
+      class="w-40"
+    />
+  </div>
 
-      <button
-        type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+  <!-- Role -->
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Role</label>
+    <Dropdown
+      v-model="filters.role"
+      :options="[
+        { label: 'All', value: '' },
+        { label: 'Member', value: 'member' },
+        { label: 'Admin', value: 'admin' }
+      ]"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Select role"
+      class="w-40"
+    />
+  </div>
+
+  <!-- Name -->
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Name</label>
+    <InputText v-model="filters.name" placeholder="Search by name" class="w-56" />
+  </div>
+
+  <!-- Email -->
+  <div class="flex flex-col">
+    <label class="block text-sm font-medium mb-1">Email</label>
+    <InputText v-model="filters.email" placeholder="Search by email" class="w-56" />
+  </div>
+
+  <!-- Apply Filters -->
+  <div>
+    <Button
+      label="Apply"
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      @click="applyFilters"
+    />
+  </div>
+</div>
+
+
+    <!-- user table -->
+ <DataTable
+  :value="users"
+  :loading="loading"
+  paginator
+  :rows="10"
+  responsiveLayout="scroll"
+  class="p-datatable-sm shadow-md rounded-xl overflow-hidden"
+>
+  <!-- Active -->
+  <Column field="active" header="Active">
+    <template #body="slotProps">
+      <Checkbox
+        :disabled="!canManageUsers || slotProps.data.deletedAt"
+        :binary="true"
+        :modelValue="slotProps.data.active"
+        @update:modelValue="(val) => updateActive(slotProps.data, val)"
+      />
+    </template>
+  </Column>
+
+  <!-- Name -->
+  <Column field="name" header="Name" sortable>
+    <template #body="slotProps">
+      <span :class="{ 'opacity-50': slotProps.data.deletedAt }"
+            v-tooltip="slotProps.data.deletedAt ? 'This user is deleted' : ''">
+        {{ slotProps.data.name }}
+      </span>
+    </template>
+  </Column>
+
+  <!-- Email -->
+  <Column field="email" header="Email" sortable>
+    <template #body="slotProps">
+      <span :class="{ 'opacity-50': slotProps.data.deletedAt }"
+            v-tooltip="slotProps.data.deletedAt ? 'This user is deleted' : ''">
+        {{ slotProps.data.email }}
+      </span>
+    </template>
+  </Column>
+
+  <!-- Role -->
+  <Column field="role" header="Role" sortable>
+    <template #body="slotProps">
+      <span
+        class="capitalize"
+        :class="{ 'opacity-50': slotProps.data.deletedAt }"
+              v-tooltip="slotProps.data.deletedAt ? 'This user is deleted' : ''"
       >
-        Add User
-      </button>
-    </form>
+        {{ slotProps.data.role }}
+      </span>
+    </template>
+  </Column>
 
-    <!-- Users Table -->
-    <table
-      v-if="!loading"
-      class="w-full border-collapse border border-gray-300"
-    >
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border p-2">Name</th>
-          <th class="border p-2">Email</th>
-          <th class="border p-2">Role</th>
-          <th class="border p-2">Created At</th>
-          <th class="border p-2">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="user in users" :key="user._id" class="hover:bg-gray-50">
-          <td class="border p-2">{{ user.name }}</td>
-          <td class="border p-2">{{ user.email }}</td>
-          <td class="border p-2 capitalize">{{ user.role }}</td>
-          <td class="border p-2">
-            {{ new Date(user.createdAt).toLocaleDateString() }}
-          </td>
-          <td class="border p-2 text-center space-x-2">
-            <!-- ✏️ Edit -->
-            <Button
-              label="Edit"
-              severity="info"
-              raised
-              size="small"
-              @click="editUser(user)"
-            />
-            <!-- ❌ Delete -->
-            <Button
-              label="Delete"
-              severity="danger"
-              raised
-              size="small"
-              @click="confirmDelete(user)"
-            />
-          </td>
-        </tr>
-        <tr v-if="users.length === 0 && !loading">
-          <td colspan="5" class="text-center p-4">No users found</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Created At -->
+  <Column field="createdAt" header="Created At" sortable>
+    <template #body="slotProps">
+      <span :class="{ 'opacity-50': slotProps.data.deletedAt }"
+            v-tooltip="slotProps.data.deletedAt ? 'This user is deleted' : ''">
+        {{ new Date(slotProps.data.createdAt).toLocaleDateString() }}
+      </span>
+    </template>
+  </Column>
+
+  <!-- Actions -->
+  <Column header="Actions">
+    <template #body="slotProps">
+      <div class="flex gap-2 justify-center">
+        <template v-if="slotProps.data.deletedAt">
+          <!-- ♻️ Restore -->
+          <Button
+            label="Restore"
+            severity="success"
+            size="small"
+            outlined
+            @click="restoreUser(slotProps.data)"
+          />
+        </template>
+        <template v-else>
+          <!-- ✏️ Edit -->
+          <Button
+            label="Edit"
+            severity="info"
+            size="small"
+            outlined
+            @click="editUser(slotProps.data)"
+          />
+          <!-- ❌ Delete -->
+          <Button
+            label="Delete"
+            severity="danger"
+            size="small"
+            outlined
+            @click="confirmDelete(slotProps.data)"
+          />
+        </template>
+      </div>
+    </template>
+  </Column>
+</DataTable>
 
     <!-- Loader -->
     <div v-if="loading" class="flex justify-center items-center h-32">
@@ -104,6 +231,10 @@
       v-model:visible="deleteVisible"
       header="Confirm Deletion"
       :style="{ width: '25rem' }"
+     modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <p class="mb-4">Are you sure you want to delete this user?</p>
       <div class="flex justify-end gap-2">
@@ -121,12 +252,17 @@
         />
       </div>
     </Dialog>
+    
 
     <!-- ✅ Edit User Dialog -->
     <Dialog
       v-model:visible="editVisible"
       header="Edit User"
       :style="{ width: '30rem' }"
+        modal                 
+  closable              
+  :draggable="false"   
+    dismissableMask="false"
     >
       <div class="flex flex-col gap-4">
         <div>
@@ -176,10 +312,16 @@ import ProgressSpinner from "primevue/progressspinner";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
-
+import { PERMISSIONS } from "~/constants/permissions";
 const store = useStore();
 const toast = useToast();
+const filters=ref({
+  status:"",
+  role:"",
+  name:"",
+  email:""
 
+})
 const form = ref({
   name: "",
   email: "",
@@ -188,9 +330,17 @@ const form = ref({
 
 const users = computed(() => store.getters["users/allUsers"]);
 const loading = computed(() => store.getters["users/isLoading"]);
-
+// ✅ Permission check
+const canManageUsers = computed(() =>
+  store.getters["auth/userPermissions"].includes(
+    PERMISSIONS.CAN_MANAGE_USERS
+  )
+);
 const deleteVisible = ref(false);
 const userToDelete = ref(null);
+
+const restoreVisible = ref(false);
+const userToRestore = ref(null);
 
 const editVisible = ref(false);
 const editForm = ref({ _id: "", name: "", email: "", role: "member" });
@@ -226,6 +376,41 @@ async function addUser() {
 function confirmDelete(user) {
   userToDelete.value = user._id;
   deleteVisible.value = true;
+}
+
+
+const updateActive = (user, value) => {
+  // Get the current user object
+
+  console.log("Updating active for user:", user, "to", value);
+  
+
+  // Create payload with updated active value
+  const payload = { ...user, active: value };
+
+  // Call Vuex action to update user
+  store
+    .dispatch("users/updateUser", payload)
+    .then(() => {
+      toast.add({
+        severity: "success",
+        summary: "Success",
+        detail: `User ${value ? "activated" : "deactivated"} successfully.`,
+        life: 3000,
+      });
+    })
+    .catch((err) => {
+      toast.add({
+        severity: "error",
+        summary: "Failed",
+        detail: err.response?.data?.message || "Could not update user.",
+        life: 3000,
+      });
+      console.error("❌ Failed to update active:", err);
+    });
+};
+function applyFilters() {
+  store.dispatch("users/fetchUsers", filters.value);
 }
 
 async function performDelete() {
@@ -275,4 +460,27 @@ async function updateUser() {
     });
   }
 }
+
+async function restoreUser(user) {
+  try {
+    const payload = { _id: user._id, deletedAt: null };
+
+    await store.dispatch("users/updateUser", payload);
+
+    toast.add({
+      severity: "success",
+      summary: "Restored",
+      detail: "User restored successfully.",
+      life: 3000,
+    });
+  } catch (err) {
+    toast.add({
+      severity: "error",
+      summary: "Failed",
+      detail: err.response?.data?.message || "Could not restore user.",
+      life: 3000,
+    });
+  }
+}
+
 </script>

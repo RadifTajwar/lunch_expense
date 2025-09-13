@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100">
+  <div class="flex min-h-screen bg-gray-100 overflow-hidden">
     <!-- Desktop Sidebar -->
     <SideMenubar
       v-if="!isMobile"
@@ -18,9 +18,9 @@
     </Sidebar>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col overflow-scroll">
       <HeaderAuth @openSidebar="mobileVisible = true" />
-      <main class="p-6 flex-1">
+      <main class="flex-1">
         <slot />
       </main>
     </div>

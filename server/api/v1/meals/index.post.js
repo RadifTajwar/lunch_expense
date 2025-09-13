@@ -17,10 +17,23 @@ export default defineEventHandler(async (event) => {
     const users = await User.find().lean();
 
     // 3️⃣ Build attendees array
-    const attendees = users.map((user) => ({
+    const attendees = users.map((user) => {
+  if (user.active) {
+    return {
       userId: user._id,
       mealCount: 1, // default
-    }));
+    };
+  }
+  else{
+    return {
+    userId: user._id,
+    mealCount: 0, // inactive users get 0 meal count
+    }
+  }
+});
+
+
+
 
     // 4️⃣ Create one Attendance doc for this meal
     const attendance = await Attendance.create({

@@ -46,20 +46,25 @@ export default {
   },
 
   actions: {
-    async fetchUsers({ commit }) {
-      commit("SET_LOADING", true);
-      try {
-        const res = await apiRequest({
-          url: USERS_URL,
-          method: "GET",
-        });
-        commit("SET_USERS", res.data.users || []);
-      } catch (err) {
-        console.error("❌ Failed to fetch users:", err);
-      } finally {
-        commit("SET_LOADING", false);
-      }
-    },
+    async fetchUsers({ commit }, filters = {}) {
+  commit("SET_LOADING", true);
+  try {
+    // 🔹 Convert filters object to query string
+    const query = new URLSearchParams(filters).toString();
+
+    const res = await apiRequest({
+      url: `${USERS_URL}${query ? `?${query}` : ""}`,
+      method: "GET",
+    });
+
+    commit("SET_USERS", res.data.users || []);
+  } catch (err) {
+    console.error("❌ Failed to fetch users:", err);
+  } finally {
+    commit("SET_LOADING", false);
+  }
+}
+,
 
     async createUser({ commit }, payload) {
       commit("SET_LOADING", true);
@@ -96,6 +101,7 @@ export default {
 
     async updateUser({ commit }, payload) {
       commit("SET_LOADING", true);
+      console.log("payload is ",payload);
       try {
         const { data } = await apiRequest({
           url: `${USERS_URL}/${payload._id}`,
