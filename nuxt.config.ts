@@ -11,17 +11,22 @@ export default defineNuxtConfig({
       {
         options: {
           theme: {
-            preset: Aura, // 👈 using Aura theme
+            preset: Aura,
+            options: {
+              darkModeSelector: false, // 🚫 disable auto dark detection
+              cssLayer: false,
+              dark: false, // 👈 force light mode
+            },
           },
         },
-        use: [ToastService], // 👈 register Toast service here
+        use: [ToastService],
       },
     ],
   ],
   compatibilityDate: "2025-09-06",
   css: [
     "~/assets/css/tailwind.css",
-    "primeicons/primeicons.css", // ✅ only keep this for icons
+    "primeicons/primeicons.css",
   ],
   googleSignIn: {
     clientId: process.env.GOOGLE_CLIENT_ID,
