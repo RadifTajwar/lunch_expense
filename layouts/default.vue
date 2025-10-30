@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100 overflow-x-hidden">
+  <div class="flex min-h-screen bg-gray-100 overflow-hidden">
     <!-- Desktop Sidebar -->
     <SideMenubar
       v-if="!isMobile"
@@ -22,12 +22,18 @@
       </Sidebar>
     </ClientOnly>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <div class="flex-1 flex flex-col overflow-y-auto">
+      <!-- ✅ Fixed Header -->
       <HeaderAuth @openSidebar="mobileVisible = true" />
-      <main class="flex-1">
-        <slot />
-      </main>
+
+      <!-- ✅ Add top padding to avoid overlap -->
+      <main
+  class="flex-1 pt-16 transition-all duration-300"
+  :class="[isOpen ? 'md:ml-72' : 'md:ml-20']"
+>
+  <slot />
+</main>
     </div>
   </div>
 </template>
@@ -54,3 +60,12 @@ onBeforeUnmount(() => {
   window.removeEventListener("resize", checkScreen);
 });
 </script>
+
+<style scoped>
+/* Optional: ensures layout fills full height properly */
+html,
+body,
+#__nuxt {
+  height: 100%;
+}
+</style>

@@ -415,6 +415,30 @@ function confirmDelete(id) {
   deleteVisible.value = true;
 }
 
+
+async function saveAttendances({ mealId, updates }) {
+  try {
+    await store.dispatch("meals/saveAttendances", { mealId, updates });
+
+    toast.add({
+      severity: "success",
+      summary: "Attendances Saved",
+      detail: "Meal attendance updated successfully.",
+      life: 3000,
+    });
+
+    fetchData(); // refresh meals list
+  } catch (error) {
+    console.error("❌ Failed to save attendances:", error);
+    toast.add({
+      severity: "error",
+      summary: "Failed",
+      detail: "Could not save attendances.",
+      life: 3000,
+    });
+  }
+}
+
 async function performDelete() {
   try {
     await store.dispatch("meals/deleteMeal", paymentToDelete.value);

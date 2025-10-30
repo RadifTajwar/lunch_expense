@@ -120,6 +120,13 @@
 </template>
 
 <script setup>
+defineOptions({ name: "Dashboard" });
+
+definePageMeta({
+  layout: "default",
+  authRequired: true,
+  title: "Dashboard",
+});
 import { ref, onMounted, computed } from "vue";
 import { useToast } from "primevue/usetoast";
 
