@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100 overflow-hidden">
+  <div class="flex min-h-screen bg-gray-100 overflow-x-hidden">
     <!-- Desktop Sidebar -->
     <SideMenubar
       v-if="!isMobile"
@@ -9,16 +9,21 @@
     />
 
     <!-- Mobile Sidebar -->
-    <Sidebar
-      v-model:visible="mobileVisible"
-      position="left"
-      class="md:hidden w-64"
-    >
-      <SideMenubar :isOpen="true" @toggle="mobileVisible = false" />
-    </Sidebar>
+    <ClientOnly>
+      <Sidebar
+        v-model:visible="mobileVisible"
+        position="left"
+        appendTo="body"
+        :baseZIndex="2000"
+        modal
+        class="md:hidden"
+      >
+        <SideMenubar :isOpen="true" @toggle="mobileVisible = false" />
+      </Sidebar>
+    </ClientOnly>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-scroll">
+    <div class="flex-1 flex flex-col overflow-y-auto">
       <HeaderAuth @openSidebar="mobileVisible = true" />
       <main class="flex-1">
         <slot />
@@ -29,11 +34,11 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import HeaderAuth from "~/components/navigation/HeaderAuth";
-import SideMenubar from "~/components/navigation/SideMenubar";
+import HeaderAuth from "~/components/navigation/HeaderAuth.vue";
+import SideMenubar from "~/components/navigation/SideMenubar.vue";
 
-const isOpen = ref(true); // desktop collapse state
-const mobileVisible = ref(false); // mobile sidebar
+const isOpen = ref(true);
+const mobileVisible = ref(false);
 const isMobile = ref(false);
 
 function checkScreen() {

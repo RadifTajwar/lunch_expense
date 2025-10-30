@@ -9,38 +9,37 @@ export default defineEventHandler(async (event) => {
     // ✅ Require admin
     await requireAdmin(event);
 
-    // 1️⃣ Create Meal
+    // 1️⃣ Read and validate body
     const body = await readBody(event);
-    const meal = await Meal.create(body);
 
-    // 2️⃣ Fetch all users
+    // Destructure to explicitly include the new 'notes' field
+    const { date, description, totalCost, notes } = body;
+
+    // 2️⃣ Create Meal (with notes)
+    const meal = await Meal.create({
+      date,
+      description,
+      totalCost,
+      notes: notes || "", // fallback for empty notes
+    });
+
+    // 3️⃣ Fetch all users
     const users = await User.find().lean();
 
-    // 3️⃣ Build attendees array
-    const attendees = users.map((user) => {
-  if (user.active) {
-    return {
-      userId: user._id,
-      mealCount: 1, // default
-    };
-  }
-  else{
-    return {
-    userId: user._id,
-    mealCount: 0, // inactive users get 0 meal count
-    }
-  }
-});
+    // 4️⃣ Build attendees array
+    const attendees = users.map((user) =>
+      user.active
+        ? { userId: user._id, mealCount: 1 }
+        : { userId: user._id, mealCount: 0 }
+    );
 
-
-
-
-    // 4️⃣ Create one Attendance doc for this meal
+    // 5️⃣ Create one Attendance doc for this meal
     const attendance = await Attendance.create({
       mealId: meal._id,
       attendees,
     });
 
+    // 6️⃣ Return combined response
     return {
       success: true,
       data: {

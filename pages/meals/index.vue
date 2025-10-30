@@ -1,102 +1,110 @@
 <template>
-  <div class="pt-20 px-6">
+  <div class="pt-20 px-6 py-4">
     <h2 class="text-xl font-semibold">Search Meals</h2>
 
-    <!-- 🔄 Loader -->
-    <div v-if="loading" class="flex justify-center items-center h-32">
-      <ProgressSpinner
-        style="width: 100px; height: 100px"
-        strokeWidth="4"
-        animationDuration=".8s"
+    <!-- 🔍 Filters -->
+    <div class="flex flex-wrap gap-4 mb-4 items-center mt-4">
+      <input
+        v-model="dateFilter"
+        type="date"
+        class="border rounded p-2 w-48"
+        @input="fetchData(1)"
+      />
+      <input
+        v-model="descriptionFilter"
+        type="text"
+        placeholder="Search by description"
+        class="border rounded p-2 w-56"
+        @input="fetchData(1)"
+      />
+      <input
+        v-model="costFilter"
+        type="number"
+        placeholder="Search by cost"
+        class="border rounded p-2 w-40"
+        @input="fetchData(1)"
       />
     </div>
 
-    <!-- ✅ Show content only when NOT loading -->
-    <div v-else>
-      <!-- 🔍 Filters -->
-      <div class="flex flex-wrap gap-4 mb-4 items-center">
-        <input
-          v-model="dateFilter"
-          type="date"
-          class="border rounded p-2 w-48"
-          @input="fetchData(1)"
-        />
-        <input
-          v-model="descriptionFilter"
-          type="text"
-          placeholder="Search by description"
-          class="border rounded p-2 w-56"
-          @input="fetchData(1)"
-        />
-        <input
-          v-model="costFilter"
-          type="number"
-          placeholder="Search by cost"
-          class="border rounded p-2 w-40"
-          @input="fetchData(1)"
-        />
-      </div>
+    <!-- ➕ Add Meal Form -->
+    <div class="mb-6 border p-4 rounded bg-gray-50" v-if="canManageMeals">
+      <h2 class="text-lg font-semibold mb-2">Add Meal</h2>
 
-      <!-- ➕ Add Meal Form -->
-      <div class="mb-6 border p-4 rounded bg-gray-50" v-if="canManageMeals">
-        <h2 class="text-lg font-semibold mb-2">Add Meal</h2>
+      <form
+        @submit.prevent="addMeal"
+        class="mb-6 flex flex-wrap gap-4 items-end border p-4 rounded bg-gray-50"
+      >
+        <div>
+          <label class="block text-sm font-medium">Date</label>
+          <input
+            v-model="form.date"
+            type="date"
+            required
+            class="border rounded p-2 w-56"
+          />
+        </div>
 
-        <form
-          @submit.prevent="addMeal"
-          class="mb-6 flex flex-wrap gap-4 items-end border p-4 rounded bg-gray-50"
+        <div>
+          <label class="block text-sm font-medium">Description</label>
+          <input
+            v-model="form.description"
+            type="text"
+            class="border rounded p-2 w-56"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium">Total Cost</label>
+          <input
+            v-model="form.totalCost"
+            type="number"
+            step="0.01"
+            required
+            class="border rounded p-2 w-40"
+          />
+        </div>
+
+        <!-- 📝 Notes field -->
+        <div>
+          <label class="block text-sm font-medium">Notes</label>
+          <input
+            v-model="form.notes"
+            type="text"
+            placeholder="Add optional notes"
+            class="border rounded p-2 w-64"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
-          <div>
-            <label class="block text-sm font-medium">Date</label>
-            <input
-              v-model="form.date"
-              type="date"
-              required
-              class="border rounded p-2 w-56"
-            />
-          </div>
+          Add Meal
+        </button>
+      </form>
+    </div>
 
-          <div>
-            <label class="block text-sm font-medium">Description</label>
-            <input
-              v-model="form.description"
-              type="text"
-              class="border rounded p-2 w-56"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium">Total Cost</label>
-            <input
-              v-model="form.totalCost"
-              type="number"
-              step="0.01"
-              required
-              class="border rounded p-2 w-40"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            Add Meal
-          </button>
-        </form>
+    <!-- 🍽️ Meals Table Area -->
+    <div class="relative min-h-[250px] border rounded bg-white p-2">
+      <div
+        v-if="loading"
+        class="absolute inset-0 flex justify-center items-center bg-white/60 z-10"
+      >
+        <ProgressSpinner
+          style="width: 70px; height: 70px"
+          strokeWidth="4"
+          animationDuration=".8s"
+        />
       </div>
 
-      <!-- 🍽️ Meals Table -->
       <DataTable
+        v-else
         :value="meals"
         dataKey="_id"
         v-model:expandedRows="expandedRows"
-        @rowExpand="onRowExpand"
-        @rowCollapse="onRowCollapse"
         class="p-datatable-sm"
       >
-        <!-- Expander Column -->
         <Column expander style="width: 3rem" />
-
-        <!-- Meal Fields -->
         <Column field="date" header="Date">
           <template #body="slotProps">
             {{ slotProps.data.date.split("T")[0] }}
@@ -104,7 +112,14 @@
         </Column>
         <Column field="description" header="Description" />
         <Column field="totalCost" header="Total Cost" />
-        <!-- Total Meal Count -->
+
+        <!-- 📝 Notes column -->
+        <Column field="notes" header="Notes">
+          <template #body="slotProps">
+            {{ slotProps.data.notes || "-" }}
+          </template>
+        </Column>
+
         <Column header="Total Meal Count">
           <template #body="slotProps">
             {{
@@ -116,7 +131,6 @@
           </template>
         </Column>
 
-        <!-- Per Person Rate -->
         <Column header="Per Person Rate">
           <template #body="slotProps">
             {{
@@ -134,10 +148,14 @@
           </template>
         </Column>
 
-        <!-- Actions -->
-        <Column header="Actions" style="min-width: 12rem" v-if="canManageMeals">
+        <Column
+          header="Actions"
+          v-if="canManageMeals"
+          headerClass="justify-end"
+          bodyClass="text-right"
+        >
           <template #body="slotProps">
-            <div class="flex gap-2">
+            <div class="flex justify-end gap-2">
               <Button
                 label="Edit"
                 severity="info"
@@ -154,7 +172,6 @@
           </template>
         </Column>
 
-        <!-- Expanded Row -->
         <template #expansion="slotProps">
           <div class="p-3 bg-gray-50 rounded-lg">
             <h5 class="mb-2 font-semibold">Manage Attendances</h5>
@@ -169,25 +186,25 @@
           </div>
         </template>
       </DataTable>
+    </div>
 
-      <!-- 📑 Pagination -->
-      <div class="flex justify-between items-center mt-4">
-        <button
-          :disabled="page <= 1"
-          @click="fetchData(page - 1)"
-          class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <p>Page {{ page }} of {{ totalPages }}</p>
-        <button
-          :disabled="page >= totalPages"
-          @click="fetchData(page + 1)"
-          class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+    <!-- 📑 Pagination -->
+    <div class="flex justify-between items-center mt-4">
+      <button
+        :disabled="page <= 1"
+        @click="fetchData(page - 1)"
+        class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+      >
+        Prev
+      </button>
+      <p>Page {{ page }} of {{ totalPages }}</p>
+      <button
+        :disabled="page >= totalPages"
+        @click="fetchData(page + 1)"
+        class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+      >
+        Next
+      </button>
     </div>
 
     <!-- ✏️ Edit Modal -->
@@ -196,10 +213,10 @@
       v-model:visible="editVisible"
       header="Edit Meal"
       :style="{ width: '30rem' }"
-      modal                 
-  closable              
-  :draggable="false"   
-    dismissableMask="false"
+      modal
+      closable
+      :draggable="false"
+      dismissableMask="false"
     >
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-4">
@@ -228,6 +245,16 @@
             class="border rounded p-2 flex-auto"
           />
         </div>
+
+        <!-- 📝 Notes in edit modal -->
+        <div class="flex items-center gap-4">
+          <label class="font-semibold w-24">Notes</label>
+          <input
+            v-model="editForm.notes"
+            type="text"
+            class="border rounded p-2 flex-auto"
+          />
+        </div>
       </div>
 
       <template #footer>
@@ -240,15 +267,15 @@
       </template>
     </Dialog>
 
-    <!-- 🗑️ Delete Confirmation Modal -->
+    <!-- 🗑️ Delete Modal -->
     <Dialog
       v-model:visible="deleteVisible"
       header="Confirm Delete"
       :style="{ width: '25rem' }"
-      modal                 
-  closable              
-  :draggable="false"   
-    dismissableMask="false"
+      modal
+      closable
+      :draggable="false"
+      dismissableMask="false"
     >
       <p>Are you sure you want to delete this payment?</p>
       <template #footer>
@@ -260,27 +287,21 @@
         <Button label="Delete" severity="danger" @click="performDelete" />
       </template>
     </Dialog>
+
     <Toast />
   </div>
 </template>
 
 <script setup>
-defineOptions({
-  name: "MealsPage",
-});
-
-definePageMeta({
-  layout: "default",
-  authRequired: true,
-  title: "Meals Management",
-});
-
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import { useToast } from "primevue/usetoast";
 import ProgressSpinner from "primevue/progressspinner";
 import AttendanceTable from "~/components/attendance/AttendanceTable.vue";
 import { PERMISSIONS } from "~/constants/permissions";
+
+defineOptions({ name: "MealsPage" });
+definePageMeta({ layout: "default", authRequired: true, title: "Meals Management" });
 
 const store = useStore();
 const toast = useToast();
@@ -292,17 +313,14 @@ const deleteVisible = ref(false);
 const paymentToDelete = ref(null);
 
 const today = new Date();
-const formatDate = (date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
+const formatDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+// 🧾 Form data
 const form = ref({
   date: formatDate(today),
   description: "",
   totalCost: "",
+  notes: "", // 📝 new
 });
 
 const editForm = ref({
@@ -310,11 +328,10 @@ const editForm = ref({
   date: "",
   description: "",
   totalCost: 0,
+  notes: "", // 📝 new
 });
 
-// 🔄 Loading state from Vuex
 const loading = computed(() => store.getters["meals/isLoading"]);
-
 const canManageMeals = computed(() =>
   store.getters["auth/userPermissions"].includes(PERMISSIONS.CAN_MANAGE_MEALS)
 );
@@ -332,7 +349,6 @@ const costFilter = computed({
   set: (val) => store.commit("meals/SET_FILTERS", { cost: val }),
 });
 
-// Meals + pagination
 const page = computed(() => store.getters["meals/currentPage"]);
 const totalPages = computed(() => store.getters["meals/totalPages"]);
 const meals = computed(() => store.getters["meals/allMeals"]);
@@ -343,29 +359,6 @@ function fetchData(page = 1) {
   store.dispatch("meals/fetchMeals", page);
 }
 
-async function saveAttendances({ mealId, updates }) {
-  try {
-    await store.dispatch("meals/saveAttendances", { mealId, updates });
-    toast.add({
-      severity: "success",
-      summary: "Attendances Saved",
-      detail: "Attendance updated successfully.",
-      life: 3000,
-    });
-  } catch (err) {
-    console.error("❌ Error saving attendances:", err);
-    toast.add({
-      severity: "error",
-      summary: "Failed",
-      detail: "Could not save attendances.",
-      life: 3000,
-    });
-  }
-}
-
-function onRowExpand(event) {}
-function onRowCollapse(event) {}
-
 async function addMeal() {
   try {
     await store.dispatch("meals/createMeal", form.value);
@@ -375,7 +368,7 @@ async function addMeal() {
       detail: "Meal created successfully.",
       life: 3000,
     });
-    form.value = { date: "", description: "", totalCost: "" };
+    form.value = { date: "", description: "", totalCost: "", notes: "" };
   } catch {
     toast.add({
       severity: "error",
@@ -392,6 +385,7 @@ function openEditMeal(meal) {
     date: meal.date.split("T")[0],
     description: meal.description,
     totalCost: meal.totalCost,
+    notes: meal.notes || "",
   };
   editVisible.value = true;
 }
@@ -406,11 +400,10 @@ async function updateMeal() {
       life: 3000,
     });
     editVisible.value = false;
-  } catch (err) {
-    console.error("❌ Error updating meal:", err);
+  } catch {
     toast.add({
       severity: "error",
-      summary: "Update Failed",
+      summary: "Failed",
       detail: "Could not update meal.",
       life: 3000,
     });
@@ -428,15 +421,15 @@ async function performDelete() {
     toast.add({
       severity: "success",
       summary: "Deleted",
-      detail: "Payment deleted successfully",
+      detail: "Meal deleted successfully.",
       life: 3000,
     });
     deleteVisible.value = false;
-  } catch (err) {
+  } catch {
     toast.add({
       severity: "error",
       summary: "Error",
-      detail: "Failed to delete payment",
+      detail: "Failed to delete meal.",
       life: 3000,
     });
   }

@@ -1,4 +1,3 @@
-// server/api/v1/meals/index.get.js
 import Meal from "~/server/models/meal/index.js";
 import Attendance from "~/server/models/attendance/index.js";
 
@@ -7,25 +6,36 @@ export default defineEventHandler(async (event) => {
     // Read query params
     const query = getQuery(event);
     const page = parseInt(query.page) || 1;
-    const limit = parseInt(query.limit) || 5;
+    const limit = parseInt(query.limit) || 10;
 
     const filters = {};
 
+    // 🗓️ Filter by date
     if (query.date) {
       filters.date = query.date; // exact match (assuming ISO date string)
     }
+
+    // 🧾 Filter by description
     if (query.description) {
       filters.description = { $regex: query.description, $options: "i" };
     }
+
+    // 💵 Filter by total cost
     if (query.cost) {
       filters.totalCost = Number(query.cost);
+    }
+
+    // 📝 Filter by notes
+    if (query.notes) {
+      filters.notes = { $regex: query.notes, $options: "i" };
     }
 
     // Count for pagination
     const totalMeals = await Meal.countDocuments(filters);
 
-    // Apply filters + pagination
+    // Apply filters + sort by date (descending) + pagination
     const meals = await Meal.find(filters)
+      .sort({ date: -1 }) // ✅ Sort by date descending
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();

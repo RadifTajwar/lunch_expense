@@ -14,6 +14,11 @@ const mealSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    notes: {
+      type: String,
+      trim: true,
+      default: "", // Optional: empty string by default
+    },
     deletedAt: {
       type: Date,
       default: null,
@@ -24,7 +29,7 @@ const mealSchema = new mongoose.Schema(
   }
 );
 
-// ✅ TTL index
+// ✅ TTL index: automatically delete meals 1 year after `date`
 mealSchema.index({ date: 1 }, { expireAfterSeconds: 31536000 });
 
 export default mealSchema;

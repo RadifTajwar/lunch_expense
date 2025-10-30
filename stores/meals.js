@@ -8,7 +8,7 @@ export default {
     meals: [],
     page: 1,
     totalPages: 1,
-    limit: 5,
+    limit: 10,
     filters: {
       date: "",
       description: "",
