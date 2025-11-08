@@ -5,19 +5,26 @@ import Attendance from "~/server/models/attendance";
 import Meal from "~/server/models/meal";
 
 /**
- * Calculate a user's balance across all time.
- * Balance = totalAdvance - totalExpense
+ * Calculate a user's balance for the current month only.
+ * Balance = totalAdvance (this month) - totalExpense (this month)
  * @param {String} userId - MongoDB ObjectId (string)
  * @returns {Number} balance
  */
 export async function calculateUserBalance(userId) {
-  // 🥘 Get all meals
-  const meals = await Meal.find({}).lean();
+  // 🗓️ Get current month range
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  // 🥘 Get all meals from current month
+  const meals = await Meal.find({
+    date: { $gte: startOfMonth, $lt: endOfMonth },
+  }).lean();
   if (!meals.length) return 0;
 
   const mealIds = meals.map((m) => m._id);
 
-  // 📌 Fetch all attendance for these meals
+  // 📋 Get attendance for meals in this month
   const attendances = await Attendance.find({
     mealId: { $in: mealIds },
   }).lean();
@@ -46,13 +53,20 @@ export async function calculateUserBalance(userId) {
     }
   }
 
-  // 💰 Get all advances
+  // 💰 Get advances from current month
   const advances = await Advance.aggregate([
-    { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(userId),
+        date: { $gte: startOfMonth, $lt: endOfMonth },
+      },
+    },
     { $group: { _id: "$userId", totalAdvance: { $sum: "$amount" } } },
   ]);
 
   const totalAdvance = advances.length ? advances[0].totalAdvance : 0;
 
-  return Number((totalAdvance - totalExpense).toFixed(2));
+  // 📊 Final balance
+  const balance = Number((totalAdvance - totalExpense).toFixed(2));
+  return balance;
 }

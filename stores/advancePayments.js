@@ -9,7 +9,7 @@ export default {
     payments: [],
     page: 1,
     totalPages: 1,
-    limit: 5,
+    limit: 15,
     filters: {
       // 🔹 MUST be initialized
       name: "",

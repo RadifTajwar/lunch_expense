@@ -62,7 +62,7 @@ async function handleLoginSuccess(response) {
               severity: 'error',
               summary: 'Login Failed',
               detail: 'Please try again.',
-              life: 3000,
+              life: 10000,
             })
         "
       />

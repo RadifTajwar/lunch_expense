@@ -1,10 +1,11 @@
-import cron from "node-cron";
+// server/utils/cron.js
+import schedule from "node-schedule";
 
-import User from "~/server/models/user/index";
-import Advance from "~/server/models/AdvancePayment/index";
-import Meal from "~/server/models/meal/index";
-import Attendance from "~/server/models/attendance/index";
-import ArchivedReport from "~/server/models/archivedReport/index"; // ✅ you create this schema
+import User from "../models/user/index.js";
+import Advance from "../models/AdvancePayment/index.js";
+import Meal from "../models/meal/index.js";
+import Attendance from "../models/attendance/index.js";
+import ArchivedReport from "../models/archivedReport/index.js";
 
 // Helper: generate start + end date for last month
 function getLastMonthRange() {
@@ -14,26 +15,26 @@ function getLastMonthRange() {
   return { startDate, endDate };
 }
 
-// This is the month-end task
-async function finalizeMonth() {
+// ✅ The month-end task
+export async function finalizeMonth() {
   try {
-    console.log("🔄 Running month-end finalize job...");
+    console.log("🔄 Running month-end finalize job…");
 
     const { startDate, endDate } = getLastMonthRange();
     const monthString = `${startDate.getFullYear()}-${String(
       startDate.getMonth() + 1
     ).padStart(2, "0")}`;
 
-    // 1. Fetch all users
+    // 1️⃣ Fetch all users
     const users = await User.find().lean();
 
-    // 2. Fetch advances for last month
+    // 2️⃣ Fetch advances for last month
     const advances = await Advance.aggregate([
       { $match: { date: { $gte: startDate, $lt: endDate } } },
       { $group: { _id: "$userId", totalAdvance: { $sum: "$amount" } } },
     ]);
 
-    // 3. Fetch meals & attendance
+    // 3️⃣ Fetch meals & attendance
     const meals = await Meal.find({
       date: { $gte: startDate, $lt: endDate },
     }).lean();
@@ -41,6 +42,7 @@ async function finalizeMonth() {
       mealId: { $in: meals.map((m) => m._id) },
     }).lean();
 
+    // 4️⃣ Calculate expenses per user
     const expensesByUser = {};
     for (const meal of meals) {
       const mealAttendance = attendances.find(
@@ -58,15 +60,15 @@ async function finalizeMonth() {
         const uid = String(attendee.userId);
         const expense = (attendee.mealCount || 0) * costPerUnit;
 
-        if (!expensesByUser[uid]) {
+        if (!expensesByUser[uid])
           expensesByUser[uid] = { totalMeals: 0, totalExpense: 0 };
-        }
+
         expensesByUser[uid].totalMeals += attendee.mealCount || 0;
         expensesByUser[uid].totalExpense += expense;
       }
     }
 
-    // 4. Merge everything & archive
+    // 5️⃣ Archive reports and carry forward
     for (const user of users) {
       const uid = String(user._id);
       const adv = advances.find((a) => String(a._id) === uid);
@@ -77,7 +79,6 @@ async function finalizeMonth() {
       const totalExpense = Number(exp.totalExpense.toFixed(2));
       const balance = Number((totalAdvance - totalExpense).toFixed(2));
 
-      // ✅ Save in ArchivedReports
       await ArchivedReport.create({
         userId: uid,
         name: user.name,
@@ -90,8 +91,6 @@ async function finalizeMonth() {
         balance,
       });
 
-      // ✅ Carry forward
-
       await Advance.create({
         userId: uid,
         amount: balance,
@@ -102,11 +101,19 @@ async function finalizeMonth() {
 
     console.log(`✅ Finalized reports for ${monthString}`);
   } catch (err) {
-    console.error("❌ Error in finalizeMonth cron:", err);
+    console.error("❌ Error in finalizeMonth:", err);
   }
 }
 
-// 5. Schedule the job: run at midnight on the 1st of every month
-cron.schedule("0 0 1 * *", () => {
-  finalizeMonth();
-});
+// ✅ Scheduler setup using node-schedule
+export function startCronJobs() {
+  // Expression: minute hour day month dayOfWeek
+  const rule = "0 0 1 * *";
+
+
+  schedule.scheduleJob(rule, () => {
+    finalizeMonth();
+  });
+
+  // console.log("🕒 node-schedule job set for 8 Nov 6:01 PM");
+}
